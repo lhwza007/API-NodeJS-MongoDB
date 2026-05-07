@@ -21,8 +21,11 @@ const productSchema = new mongoose.Schema({
 
 const Product = mongoose.model('Product', productSchema);
 
-// CRUD Endpoints
+app.get('/', (req, res) => {
+    res.send('Welcome to the Product API Server!');
+});
 
+// CRUD Endpoints
 
 // get all products
 app.get('/products', async (req, res) => {
