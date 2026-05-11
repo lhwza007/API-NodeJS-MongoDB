@@ -1,11 +1,13 @@
 import { Router } from "express";
 import dayjs from "dayjs";
 import productRoutes from "./product.routes";
+import faqRoutes from "./faq.rouutes";
 
 const router = Router();
 
 // API Routes
 router.use("/products", productRoutes);
+router.use("/faq", faqRoutes);
 
 // Health check endpoint
 router.get("/health", (_req, res) => {
