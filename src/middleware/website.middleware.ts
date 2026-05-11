@@ -83,7 +83,7 @@ export const validateWebsite = (
 /**
  * ดึงชื่อ collection จาก x-collection header และตรวจสอบสิทธิ์การเข้าถึง
  */
-export const getCollectionFromRequest = (req: WebsiteRequest): string => {
+export const getXCollectionFromRequest = (req: WebsiteRequest): string => {
   if (!req.website) {
     throw new Error(
       "Website context not found in request. Ensure validateWebsite middleware is applied."
@@ -116,7 +116,7 @@ export const getCollectionFromRequest = (req: WebsiteRequest): string => {
 /**
  * ดึง website ID จาก request context
  */
-export const getWebsiteIdFromRequest = (req: WebsiteRequest): string => {
+export const getXWebsiteFromRequest = (req: WebsiteRequest): string => {
   if (!req.websiteId) {
     throw new Error(
       "Website ID not found in request. Ensure validateWebsite middleware is applied."

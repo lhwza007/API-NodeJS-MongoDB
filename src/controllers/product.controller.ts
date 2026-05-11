@@ -6,8 +6,8 @@ import {
   UpdateProductInput,
 } from "../schemas/product.schema";
 import {
-  getWebsiteIdFromRequest,
-  getCollectionFromRequest,
+  getXWebsiteFromRequest,
+  getXCollectionFromRequest,
 } from "../middleware/website.middleware";
 import { sendError, sendSuccess } from "../utils/response";
 import { PaginationUtils } from "../utils/pagination";
@@ -26,8 +26,8 @@ export class ProductController {
   createProduct = async (req: WebsiteRequest, res: Response): Promise<void> => {
     try {
       const productData = req.body as CreateProductInput;
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       const newProduct = await this.productModel.createProduct(
         productData,
@@ -57,8 +57,8 @@ export class ProductController {
   ): Promise<void> => {
     try {
       const category = req.query.category as string | undefined;
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       // pagination
       const paginationParams = PaginationUtils.parsePaginationParams(
@@ -103,8 +103,8 @@ export class ProductController {
   getProductById = async (req: WebsiteRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       const product = await this.productModel.getProductById(
         String(id),
@@ -136,8 +136,8 @@ export class ProductController {
     try {
       const { id } = req.params;
       const body = req.body as UpdateProductInput;
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       const productData: Record<string, unknown> = {};
       if (body.product_id !== undefined) productData.product_id = body.product_id;
@@ -177,8 +177,8 @@ export class ProductController {
   deleteProduct = async (req: WebsiteRequest, res: Response): Promise<void> => {
     try {
       const { id } = req.params;
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       const deleted = await this.productModel.deleteProduct(String(id), collectionName);
 
@@ -204,8 +204,8 @@ export class ProductController {
    */
   getAllCategories = async (req: WebsiteRequest, res: Response): Promise<void> => {
     try {
-      const siteOrigin = getWebsiteIdFromRequest(req);
-      const collectionName = getCollectionFromRequest(req);
+      const siteOrigin = getXWebsiteFromRequest(req);
+      const collectionName = getXCollectionFromRequest(req);
 
       const categories = await this.productModel.getAllCategories(
         collectionName,
