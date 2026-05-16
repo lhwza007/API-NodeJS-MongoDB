@@ -1,7 +1,7 @@
 import { Router } from "express";
 import dayjs from "dayjs";
 import productRoutes from "./product.routes";
-import faqRoutes from "./faq.rouutes";
+import faqRoutes from "./faq.routes";
 
 const router = Router();
 

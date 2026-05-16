@@ -1,0 +1,89 @@
+stages:
+  - lint
+  - build
+  - deploy
+
+variables:
+  # GitLab Container Registry image path
+  DOCKER_IMAGE: $CI_REGISTRY_IMAGE:$CI_COMMIT_REF_SLUG
+  DOCKER_IMAGE_LATEST: $CI_REGISTRY_IMAGE:latest
+
+# Quality Stage: Check for code style and potential errors
+lint:
+  stage: lint
+  image: node:18-alpine
+  script:
+    - npm ci
+    - npm run lint
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+# Build Stage: Build and push the Docker image
+build:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - docker:24.0.5-dind
+  before_script:
+    - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
+  script:
+    - docker build --pull -t $DOCKER_IMAGE .
+    - docker push $DOCKER_IMAGE
+    # Also tag as latest if on the main branch
+    - |
+      if [ "$CI_COMMIT_BRANCH" == "main" ]; then
+        docker tag $DOCKER_IMAGE $DOCKER_IMAGE_LATEST
+        docker push $DOCKER_IMAGE_LATEST
+      fi
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+
+# Deploy Stage: Deploy to AWS EC2
+deploy_production:
+  stage: deploy
+  image: alpine:latest
+  before_script:
+    # Install SSH client
+    - apk add --no-cache openssh-client
+    # Start SSH agent and add the private key stored in GitLab CI/CD variables
+    - eval $(ssh-agent -s)
+    - echo "$SSH_PRIVATE_KEY" | tr -d '\r' | ssh-add -
+    # Create the SSH directory and scan the EC2 host key to avoid interactive prompts
+    - mkdir -p ~/.ssh
+    - chmod 700 ~/.ssh
+    - ssh-keyscan $EC2_HOST >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
+  script:
+    - echo "Deploying image $DOCKER_IMAGE to EC2..."
+    - |
+      # Transfer the .env file to the EC2 instance
+      # Note: ENV_FILE must be defined as a 'File' type variable in GitLab CI/CD settings
+      scp -o StrictHostKeyChecking=no $ENV_FILE $EC2_USER@$EC2_HOST:/home/$EC2_USER/.env
+      
+      ssh $EC2_USER@$EC2_HOST "
+        # Login to GitLab Container Registry on the server
+        echo $CI_REGISTRY_PASSWORD | docker login -u $CI_REGISTRY_USER --password-stdin $CI_REGISTRY &&
+        
+        # Pull the latest image
+        docker pull $DOCKER_IMAGE &&
+        
+        # Stop and remove the existing container if it exists
+        docker stop api-nodejs || true &&
+        docker rm api-nodejs || true &&
+        
+        # Run the new container with the .env file
+        docker run -d \
+          --name api-nodejs \
+          --restart always \
+          -p 3000:3000 \
+          --env-file /home/$EC2_USER/.env \
+          $DOCKER_IMAGE
+      "
+  environment:
+    name: production
+  rules:
+    - if: $CI_COMMIT_BRANCH == 'main'
+      when: manual
+
+
